@@ -26,12 +26,15 @@ namespace BDiazEApiGateway
                 DomainName = domainName
             });
 
+            // Se crea el dominio al API Gateway
             DomainName domain = new DomainName(this, $"{appName}DomainName", new DomainNameProps {
                 DomainName = subdomainName,
                 Certificate = certificate
             });
 
+            // Se crea el rol para el API Gateway y se le asigna un permiso para enviar logs a CloudWatch
             Role role = new Role(this, $"{appName}Role", new RoleProps {
+                RoleName = $"{appName}ApiGatewayRole",
                 AssumedBy = new ServicePrincipal("apigateway.amazonaws.com"),
                 ManagedPolicies = new[] {
                     ManagedPolicy.FromAwsManagedPolicyName("service-role/AmazonAPIGatewayPushToCloudWatchLogs")
@@ -42,6 +45,7 @@ namespace BDiazEApiGateway
                 CloudWatchRoleArn = role.RoleArn
             });
 
+            // Se crea el ARecord para el subdominio del API Gateway
             ARecord record = new ARecord(this, $"{appName}ARecord", new ARecordProps {
                 Zone = hostedZone,
                 RecordName = subdomainName,
