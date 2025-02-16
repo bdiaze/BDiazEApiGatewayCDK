@@ -1,4 +1,5 @@
 using Amazon.CDK;
+using Amazon.CDK.AWS.Apigatewayv2;
 using Amazon.CDK.AWS.APIGateway;
 using Amazon.CDK.AWS.CertificateManager;
 using Amazon.CDK.AWS.IAM;
@@ -7,8 +8,8 @@ using CfnAccount = Amazon.CDK.AWS.APIGateway.CfnAccount;
 using CfnAccountProps = Amazon.CDK.AWS.APIGateway.CfnAccountProps;
 using Amazon.CDK.AWS.Route53;
 using Amazon.CDK.AWS.Route53.Targets;
+using DomainNameProps = Amazon.CDK.AWS.Apigatewayv2.DomainNameProps;
 using EndpointType = Amazon.CDK.AWS.Apigatewayv2.EndpointType;
-using DomainNameProps = Amazon.CDK.AWS.APIGateway.DomainNameProps;
 
 namespace BDiazEApiGateway
 {
@@ -21,17 +22,21 @@ namespace BDiazEApiGateway
             string subdomainName = System.Environment.GetEnvironmentVariable("SUBDOMAIN_NAME")!;
             string certificateArn = System.Environment.GetEnvironmentVariable("CERTIFICATE_ARN")!;
 
+            ICertificate certificate = Certificate.FromCertificateArn(this, $"{appName}Certificate", certificateArn);
             IHostedZone hostedZone = HostedZone.FromLookup(this, $"{appName}HostedZone", new HostedZoneProviderProps {
                 DomainName = domainName
             });
 
             // Se crea el dominio al API Gateway
-            CfnDomainName domain = new CfnDomainName(this, $"{appName}DomainName", new CfnDomainNameProps {
+            DomainName domain = new DomainName(this, $"{appName}DomainName", new DomainNameProps {
                 DomainName = subdomainName,
-                CertificateArn = certificateArn,
-                EndpointConfiguration = new CfnDomainName.EndpointConfigurationProperty {
-                    Types = ["EDGE"]
-                }
+                Certificate = certificate
+            });
+
+            // Se añade endpoint Edge al dominio
+            domain.AddEndpoint(new EndpointOptions {
+                EndpointType = EndpointType.EDGE,
+                Certificate = certificate,
             });
 
             // Se crea el rol para el API Gateway y se le asigna un permiso para enviar logs a CloudWatch
@@ -51,7 +56,7 @@ namespace BDiazEApiGateway
             ARecord record = new ARecord(this, $"{appName}ARecord", new ARecordProps {
                 Zone = hostedZone,
                 RecordName = subdomainName,
-                Target = RecordTarget.FromAlias(new ApiGatewayv2DomainProperties(domain.AttrRegionalDomainName, domain.AttrRegionalHostedZoneId))
+                Target = RecordTarget.FromAlias(new ApiGatewayv2DomainProperties(domain.RegionalDomainName, domain.RegionalHostedZoneId))
             });
         }
     }
