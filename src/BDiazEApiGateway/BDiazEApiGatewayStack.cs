@@ -30,13 +30,8 @@ namespace BDiazEApiGateway
             // Se crea el dominio al API Gateway
             DomainName domain = new DomainName(this, $"{appName}DomainName", new DomainNameProps {
                 DomainName = subdomainName,
-                Certificate = certificate
-            });
-
-            // Se añade endpoint Edge al dominio
-            domain.AddEndpoint(new EndpointOptions {
-                EndpointType = EndpointType.EDGE,
                 Certificate = certificate,
+                EndpointType = EndpointType.REGIONAL,
             });
 
             // Se crea el rol para el API Gateway y se le asigna un permiso para enviar logs a CloudWatch
