@@ -9,6 +9,7 @@ using CfnAccountProps = Amazon.CDK.AWS.APIGateway.CfnAccountProps;
 using Amazon.CDK.AWS.Route53;
 using Amazon.CDK.AWS.Route53.Targets;
 using DomainNameProps = Amazon.CDK.AWS.Apigatewayv2.DomainNameProps;
+using EndpointType = Amazon.CDK.AWS.Apigatewayv2.EndpointType;
 
 namespace BDiazEApiGateway
 {
@@ -29,7 +30,8 @@ namespace BDiazEApiGateway
             // Se crea el dominio al API Gateway
             DomainName domain = new DomainName(this, $"{appName}DomainName", new DomainNameProps {
                 DomainName = subdomainName,
-                Certificate = certificate
+                Certificate = certificate,
+                EndpointType = EndpointType.EDGE,
             });
 
             // Se crea el rol para el API Gateway y se le asigna un permiso para enviar logs a CloudWatch
